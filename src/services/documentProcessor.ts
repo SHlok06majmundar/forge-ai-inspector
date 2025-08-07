@@ -212,7 +212,11 @@ export class DocumentProcessor {
     isNotExpired: boolean;
     hasRequiredFields: boolean;
   } {
-    const isValidName = documentInfo.extractedName?.toLowerCase().includes('john doe') || false;
+    // Validate that a proper name was extracted (not empty, reasonable format)
+    const isValidName = !!(documentInfo.extractedName && 
+                          documentInfo.extractedName.trim().length > 0 &&
+                          this.isValidName(documentInfo.extractedName));
+    
     const isNotExpired = documentInfo.expiryDate ? documentInfo.expiryDate > new Date() : false;
     const hasRequiredFields = !!(documentInfo.extractedName && documentInfo.documentType);
 
@@ -242,7 +246,7 @@ export class DocumentProcessor {
       issues.push('Missing required document information');
     }
     if (!validation.isValidName) {
-      issues.push('Name does not match "John Doe"');
+      issues.push('Invalid or missing name in document');
     }
     if (!validation.isNotExpired) {
       issues.push('Document has expired or no valid expiry date found');
