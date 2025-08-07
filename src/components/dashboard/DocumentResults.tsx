@@ -1,0 +1,203 @@
+import { motion } from 'framer-motion';
+import { CheckCircle, XCircle, AlertTriangle, FileText, Calendar, User } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+
+export interface DocumentResult {
+  id: string;
+  fileName: string;
+  documentType: string;
+  extractedName: string;
+  issueDate: Date;
+  expiryDate: Date;
+  isValidName: boolean;
+  isNotExpired: boolean;
+  status: 'Pass' | 'Fail';
+  customComment: string;
+  processedAt: Date;
+}
+
+interface DocumentResultsProps {
+  results: DocumentResult[];
+}
+
+const DocumentResults = ({ results }: DocumentResultsProps) => {
+  if (results.length === 0) {
+    return (
+      <Card className="bg-gradient-card shadow-medium">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2">No Documents Processed</h3>
+          <p className="text-muted-foreground max-w-sm">
+            Upload your first document to start the AI-powered verification process.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Pass':
+        return <CheckCircle className="w-5 h-5 text-success" />;
+      case 'Fail':
+        return <XCircle className="w-5 h-5 text-destructive" />;
+      default:
+        return <AlertTriangle className="w-5 h-5 text-warning" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Pass':
+        return <Badge className="bg-success/10 text-success border-success/20">Pass</Badge>;
+      case 'Fail':
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Fail</Badge>;
+      default:
+        return <Badge className="bg-warning/10 text-warning border-warning/20">Pending</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-gradient-card shadow-medium">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-primary" />
+            <span>Document Verification Results</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Document</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Type</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Name</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Validity</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((result, index) => (
+                  <motion.tr
+                    key={result.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="py-4 px-4">
+                      <div className="font-medium text-foreground">{result.fileName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {format(result.processedAt, 'MMM dd, yyyy HH:mm')}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <Badge variant="secondary">{result.documentType}</Badge>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center space-x-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{result.extractedName}</span>
+                        {result.isValidName ? (
+                          <CheckCircle className="w-4 h-4 text-success" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-destructive" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span>Expires: {format(result.expiryDate, 'MMM dd, yyyy')}</span>
+                          {result.isNotExpired ? (
+                            <CheckCircle className="w-4 h-4 text-success" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-destructive" />
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(result.status)}
+                        {getStatusBadge(result.status)}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detailed Cards View for Mobile */}
+      <div className="lg:hidden space-y-4">
+        {results.map((result, index) => (
+          <motion.div
+            key={`card-${result.id}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card className="bg-gradient-card shadow-soft">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{result.fileName}</CardTitle>
+                  {getStatusBadge(result.status)}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Type:</span>
+                    <div className="font-medium">{result.documentType}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Name:</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-medium">{result.extractedName}</span>
+                      {result.isValidName ? (
+                        <CheckCircle className="w-3 h-3 text-success" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-destructive" />
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Expires:</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-medium">{format(result.expiryDate, 'MMM dd, yyyy')}</span>
+                      {result.isNotExpired ? (
+                        <CheckCircle className="w-3 h-3 text-success" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-destructive" />
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Processed:</span>
+                    <div className="font-medium">{format(result.processedAt, 'MMM dd, HH:mm')}</div>
+                  </div>
+                </div>
+                {result.customComment && (
+                  <div className="pt-2 border-t border-border">
+                    <span className="text-muted-foreground text-sm">Comment:</span>
+                    <p className="text-sm font-medium mt-1">{result.customComment}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default DocumentResults;
