@@ -9,13 +9,16 @@ export interface DocumentResult {
   fileName: string;
   documentType: string;
   extractedName: string;
-  issueDate: Date;
-  expiryDate: Date;
+  issueDate: Date | null;
+  expiryDate: Date | null;
   isValidName: boolean;
   isNotExpired: boolean;
-  status: 'Pass' | 'Fail';
+  status: 'Pending' | 'Pending Review' | 'Complete' | 'Rejected';
   customComment: string;
   processedAt: Date;
+  achieveDate?: Date;
+  validLocation?: string;
+  extractedText?: string;
 }
 
 interface DocumentResultsProps {
@@ -39,10 +42,14 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Pass':
+      case 'Complete':
         return <CheckCircle className="w-5 h-5 text-success" />;
-      case 'Fail':
+      case 'Rejected':
         return <XCircle className="w-5 h-5 text-destructive" />;
+      case 'Pending Review':
+        return <AlertTriangle className="w-5 h-5 text-warning" />;
+      case 'Pending':
+        return <AlertTriangle className="w-5 h-5 text-muted-foreground" />;
       default:
         return <AlertTriangle className="w-5 h-5 text-warning" />;
     }
@@ -50,12 +57,16 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Pass':
-        return <Badge className="bg-success/10 text-success border-success/20">Pass</Badge>;
-      case 'Fail':
-        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Fail</Badge>;
+      case 'Complete':
+        return <Badge className="bg-success/10 text-success border-success/20">Complete</Badge>;
+      case 'Rejected':
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
+      case 'Pending Review':
+        return <Badge className="bg-warning/10 text-warning border-warning/20">Pending Review</Badge>;
+      case 'Pending':
+        return <Badge className="bg-muted/20 text-muted-foreground border-muted">Pending</Badge>;
       default:
-        return <Badge className="bg-warning/10 text-warning border-warning/20">Pending</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20">Unknown</Badge>;
     }
   };
 
@@ -111,15 +122,19 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
                     </td>
                     <td className="py-4 px-4">
                       <div className="space-y-1">
-                        <div className="flex items-center space-x-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>Expires: {format(result.expiryDate, 'MMM dd, yyyy')}</span>
-                          {result.isNotExpired ? (
-                            <CheckCircle className="w-4 h-4 text-success" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-destructive" />
-                          )}
-                        </div>
+                        {result.expiryDate ? (
+                          <div className="flex items-center space-x-2 text-sm">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span>Expires: {format(result.expiryDate, 'MMM dd, yyyy')}</span>
+                            {result.isNotExpired ? (
+                              <CheckCircle className="w-4 h-4 text-success" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-destructive" />
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">No expiry date found</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -171,14 +186,18 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Expires:</span>
-                    <div className="flex items-center space-x-1">
-                      <span className="font-medium">{format(result.expiryDate, 'MMM dd, yyyy')}</span>
-                      {result.isNotExpired ? (
-                        <CheckCircle className="w-3 h-3 text-success" />
-                      ) : (
-                        <XCircle className="w-3 h-3 text-destructive" />
-                      )}
-                    </div>
+                    {result.expiryDate ? (
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium">{format(result.expiryDate, 'MMM dd, yyyy')}</span>
+                        {result.isNotExpired ? (
+                          <CheckCircle className="w-3 h-3 text-success" />
+                        ) : (
+                          <XCircle className="w-3 h-3 text-destructive" />
+                        )}
+                      </div>
+                    ) : (
+                      <div className="font-medium text-muted-foreground">Not found</div>
+                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground">Processed:</span>

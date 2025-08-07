@@ -8,9 +8,10 @@ import { motion } from 'framer-motion';
 interface DocumentUploadProps {
   onFileUpload: (file: File) => void;
   isProcessing: boolean;
+  processingProgress?: { stage: string; progress: number } | null;
 }
 
-const DocumentUpload = ({ onFileUpload, isProcessing }: DocumentUploadProps) => {
+const DocumentUpload = ({ onFileUpload, isProcessing, processingProgress }: DocumentUploadProps) => {
   const [dragActive, setDragActive] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -61,10 +62,23 @@ const DocumentUpload = ({ onFileUpload, isProcessing }: DocumentUploadProps) => 
             </h3>
             <p className="text-muted-foreground max-w-sm mx-auto">
               {isProcessing 
-                ? 'Our AI is analyzing your document. This may take a few moments.'
+                ? (processingProgress ? processingProgress.stage : 'Analyzing your document with OCR...')
                 : 'Drag and drop your PDF or image file here, or click to browse'
               }
             </p>
+            {processingProgress && (
+              <div className="w-full max-w-sm mx-auto">
+                <div className="bg-secondary rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-primary h-full transition-all duration-300 ease-out"
+                    style={{ width: `${processingProgress.progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-center">
+                  {processingProgress.progress}% complete
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">

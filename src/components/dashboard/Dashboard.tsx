@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DocumentUpload from './DocumentUpload';
 import DocumentResults, { DocumentResult } from './DocumentResults';
 import { useToast } from '@/hooks/use-toast';
+import { documentProcessor, ProcessingProgress } from '@/services/documentProcessor';
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -14,77 +15,42 @@ const Dashboard = () => {
   const [documents, setDocuments] = useState<DocumentResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const simulateDocumentProcessing = async (file: File): Promise<DocumentResult> => {
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
+  const [processingProgress, setProcessingProgress] = useState<ProcessingProgress | null>(null);
 
-    // Simulate different document types and results
-    const documentTypes = ['Passport', 'Driver License', 'ID Card', 'Birth Certificate'];
-    const randomType = documentTypes[Math.floor(Math.random() * documentTypes.length)];
-    
-    // Simulate name extraction (sometimes John Doe, sometimes not)
-    const names = ['John Doe', 'Jane Smith', 'John Doe', 'Michael Johnson', 'John Doe'];
-    const extractedName = names[Math.floor(Math.random() * names.length)];
-    
-    // Generate random dates
-    const issueDate = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000 * 2);
-    const expiryDate = new Date(Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000 * 3);
-    
-    const isValidName = extractedName === 'John Doe';
-    const isNotExpired = expiryDate > new Date();
-    const status = isValidName && isNotExpired ? 'Pass' : 'Fail';
-    
-    let customComment = '';
-    if (!isValidName && !isNotExpired) {
-      customComment = 'Name mismatch and document expired';
-    } else if (!isValidName) {
-      customComment = 'Name does not match expected "John Doe"';
-    } else if (!isNotExpired) {
-      customComment = 'Document has expired';
-    } else {
-      customComment = 'All validations passed successfully';
-    }
-
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      fileName: file.name,
-      documentType: randomType,
-      extractedName,
-      issueDate,
-      expiryDate,
-      isValidName,
-      isNotExpired,
-      status,
-      customComment,
-      processedAt: new Date()
-    };
+  const processDocument = async (file: File): Promise<DocumentResult> => {
+    return await documentProcessor.processDocument(file, (progress) => {
+      setProcessingProgress(progress);
+    });
   };
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
+    setProcessingProgress(null);
     
     try {
       toast({
-        title: "Processing Document",
-        description: `AI analysis started for ${file.name}`,
+        title: "Document Uploaded",
+        description: `Starting OCR analysis for ${file.name}`,
       });
 
-      const result = await simulateDocumentProcessing(file);
+      const result = await processDocument(file);
       setDocuments(prev => [result, ...prev]);
       
+      const isSuccess = result.status === 'Complete';
       toast({
-        title: result.status === 'Pass' ? "Verification Passed" : "Verification Failed",
+        title: isSuccess ? "Document Verified" : "Verification Failed",
         description: result.customComment,
-        variant: result.status === 'Pass' ? 'default' : 'destructive'
+        variant: isSuccess ? 'default' : 'destructive'
       });
     } catch (error) {
       toast({
         title: "Processing Error",
-        description: "Failed to process document. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to process document. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
+      setProcessingProgress(null);
     }
   };
 
@@ -98,7 +64,7 @@ const Dashboard = () => {
     {
       title: "Success Rate",
       value: documents.length > 0 
-        ? `${Math.round((documents.filter(d => d.status === 'Pass').length / documents.length) * 100)}%`
+        ? `${Math.round((documents.filter(d => d.status === 'Complete').length / documents.length) * 100)}%`
         : "0%",
       icon: TrendingUp,
       color: "text-success"
@@ -209,7 +175,11 @@ const Dashboard = () => {
           transition={{ delay: 0.3 }}
           className="mb-8"
         >
-          <DocumentUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
+          <DocumentUpload 
+            onFileUpload={handleFileUpload} 
+            isProcessing={isProcessing}
+            processingProgress={processingProgress}
+          />
         </motion.div>
 
         {/* Results Section */}
