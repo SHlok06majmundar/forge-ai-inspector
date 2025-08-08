@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Image, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Image, AlertCircle, Sparkles, Zap, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -31,75 +31,132 @@ const DocumentUpload = ({ onFileUpload, isProcessing, processingProgress }: Docu
   });
 
   return (
-    <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors duration-300">
+    <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-all duration-500 bg-gradient-to-br from-card via-card/80 to-primary/5 backdrop-blur-sm shadow-lg">
       <div
         {...getRootProps()}
-        className={`p-8 text-center cursor-pointer rounded-lg transition-all duration-300 ${
-          isDragActive ? 'bg-primary/5 border-primary' : 'hover:bg-muted/50'
-        } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`p-8 text-center cursor-pointer rounded-lg transition-all duration-500 ${
+          isDragActive 
+            ? 'bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary shadow-lg scale-105' 
+            : 'hover:bg-gradient-to-br hover:from-muted/20 hover:to-primary/5'
+        } ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
       >
         <input {...getInputProps()} />
         
         <motion.div
           initial={{ scale: 1 }}
-          animate={{ scale: isDragActive ? 1.1 : 1 }}
-          className="flex flex-col items-center space-y-4"
+          animate={{ 
+            scale: isDragActive ? 1.1 : 1,
+            rotate: isProcessing ? 360 : 0
+          }}
+          transition={{ 
+            scale: { duration: 0.3 },
+            rotate: { duration: 2, repeat: isProcessing ? Infinity : 0, ease: "linear" }
+          }}
+          className="flex flex-col items-center space-y-6"
         >
           <div className="relative">
-            <Upload className={`w-16 h-16 mx-auto transition-colors duration-300 ${
-              isDragActive ? 'text-primary' : 'text-muted-foreground'
-            }`} />
-            {isProcessing && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            {isProcessing ? (
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center">
+                <Brain className="w-10 h-10 text-primary animate-pulse" />
+                <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
               </div>
+            ) : (
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="w-20 h-20 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full flex items-center justify-center shadow-lg"
+              >
+                <Upload className={`w-10 h-10 transition-all duration-300 ${
+                  isDragActive ? 'text-primary scale-110' : 'text-muted-foreground'
+                }`} />
+                {!isProcessing && (
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 rounded-full border-2 border-primary/30"
+                  />
+                )}
+              </motion.div>
             )}
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-foreground">
-              {isProcessing ? 'Processing Document...' : 'Upload Document'}
-            </h3>
-            <p className="text-muted-foreground max-w-sm mx-auto">
+          <div className="space-y-3">
+            <motion.h3 
+              animate={{ 
+                backgroundPosition: isProcessing ? ['0%', '100%'] : '0%',
+              }}
+              transition={{ duration: 2, repeat: isProcessing ? Infinity : 0 }}
+              className="text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent"
+            >
+              {isProcessing ? 'AI Processing Document...' : 'Upload Document'}
+            </motion.h3>
+            <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
               {isProcessing 
-                ? (processingProgress ? processingProgress.stage : 'Analyzing your document with OCR...')
-                : 'Drag and drop your PDF or image file here, or click to browse'
+                ? (processingProgress ? processingProgress.stage : 'Our neural networks are analyzing your document...')
+                : 'Drag and drop your PDF or image file here, or click to browse. Our AI will instantly extract and verify the information.'
               }
             </p>
             {processingProgress && (
-              <div className="w-full max-w-sm mx-auto">
-                <div className="bg-secondary rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="bg-primary h-full transition-all duration-300 ease-out"
+              <div className="w-full max-w-sm mx-auto space-y-2">
+                <div className="bg-secondary/50 rounded-full h-3 overflow-hidden backdrop-blur-sm">
+                  <motion.div 
+                    className="bg-gradient-to-r from-primary via-primary/80 to-primary h-full transition-all duration-500 ease-out shadow-sm"
                     style={{ width: `${processingProgress.progress}%` }}
+                    animate={{ 
+                      backgroundPosition: ['0%', '100%'],
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 text-center">
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs text-primary font-medium text-center"
+                >
                   {processingProgress.progress}% complete
-                </p>
+                </motion.p>
               </div>
             )}
           </div>
 
-          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-1">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center space-x-6 text-sm text-muted-foreground"
+          >
+            <div className="flex items-center space-x-2 p-2 rounded-lg bg-blue-50 text-blue-600">
               <FileText className="w-4 h-4" />
-              <span>PDF</span>
+              <span className="font-medium">PDF</span>
             </div>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2 p-2 rounded-lg bg-green-50 text-green-600">
               <Image className="w-4 h-4" />
-              <span>Images</span>
+              <span className="font-medium">Images</span>
             </div>
-          </div>
+            <div className="flex items-center space-x-2 p-2 rounded-lg bg-purple-50 text-purple-600">
+              <Sparkles className="w-4 h-4" />
+              <span className="font-medium">AI Powered</span>
+            </div>
+          </motion.div>
 
           {!isProcessing && (
-            <Button 
-              variant="secondary" 
-              className="mt-4"
-              onClick={(e) => e.stopPropagation()}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
             >
-              Choose File
-            </Button>
+              <Button 
+                variant="default" 
+                size="lg"
+                className="mt-4 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Choose File
+              </Button>
+            </motion.div>
           )}
         </motion.div>
       </div>
