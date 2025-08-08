@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, AlertTriangle, FileText, Calendar, User } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, FileText, Calendar, User, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 
 export interface DocumentResult {
@@ -23,9 +24,10 @@ export interface DocumentResult {
 
 interface DocumentResultsProps {
   results: DocumentResult[];
+  onDeleteDocument?: (id: string) => void;
 }
 
-const DocumentResults = ({ results }: DocumentResultsProps) => {
+const DocumentResults = ({ results, onDeleteDocument }: DocumentResultsProps) => {
   if (results.length === 0) {
     return (
       <Card className="bg-gradient-card shadow-medium">
@@ -89,6 +91,7 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Name</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Validity</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Status</th>
+                  <th className="text-right py-3 px-4 font-semibold text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,6 +146,20 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
                         {getStatusBadge(result.status)}
                       </div>
                     </td>
+                    <td className="py-4 px-4">
+                      <div className="flex justify-end">
+                        {onDeleteDocument && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDeleteDocument(result.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
                   </motion.tr>
                 ))}
               </tbody>
@@ -164,7 +181,19 @@ const DocumentResults = ({ results }: DocumentResultsProps) => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{result.fileName}</CardTitle>
-                  {getStatusBadge(result.status)}
+                  <div className="flex items-center space-x-2">
+                    {getStatusBadge(result.status)}
+                    {onDeleteDocument && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteDocument(result.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">

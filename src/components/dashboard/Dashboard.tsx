@@ -14,8 +14,15 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [documents, setDocuments] = useState<DocumentResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-
   const [processingProgress, setProcessingProgress] = useState<ProcessingProgress | null>(null);
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(prev => prev.filter(doc => doc.id !== id));
+    toast({
+      title: "Document Deleted",
+      description: "Document has been removed from the system.",
+    });
+  };
 
   const processDocument = async (file: File): Promise<DocumentResult> => {
     return await documentProcessor.processDocument(file, (progress) => {
@@ -188,7 +195,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <DocumentResults results={documents} />
+          <DocumentResults results={documents} onDeleteDocument={handleDeleteDocument} />
         </motion.div>
       </main>
     </div>

@@ -1,6 +1,15 @@
 import { createWorker } from 'tesseract.js';
 import { DocumentResult } from '@/components/dashboard/DocumentResults';
 
+// Mock worker names database (in real app, this would come from backend)
+const WORKER_NAMES = [
+  'John Doe',
+  'Jane Smith', 
+  'Mike Johnson',
+  'Sarah Wilson',
+  'David Brown'
+];
+
 export interface ProcessingProgress {
   stage: string;
   progress: number;
@@ -8,6 +17,20 @@ export interface ProcessingProgress {
 
 export class DocumentProcessor {
   private worker: Tesseract.Worker | null = null;
+
+  // Check if extracted name exists in worker database
+  private checkWorkerNameExists(extractedName: string): boolean {
+    return WORKER_NAMES.some(workerName => 
+      workerName.toLowerCase() === extractedName.toLowerCase().trim()
+    );
+  }
+
+  // Add PDF text extraction method
+  private async extractTextFromPDF(file: File): Promise<string> {
+    // For now, return message that PDF processing requires backend
+    // In real implementation, you'd use pdf-parse or similar
+    return `PDF Processing: ${file.name}\nDocument detected but text extraction from PDF requires backend processing.\nPlease upload as image for full OCR processing.`;
+  }
 
   async initializeOCR(): Promise<void> {
     if (this.worker) return;
@@ -66,6 +89,11 @@ export class DocumentProcessor {
   }
 
   private async extractText(file: File): Promise<string> {
+    // Handle PDF files differently
+    if (file.type === 'application/pdf') {
+      return await this.extractTextFromPDF(file);
+    }
+    
     if (!this.worker) throw new Error('OCR worker not initialized');
 
     const { data: { text } } = await this.worker.recognize(file);
@@ -211,11 +239,15 @@ export class DocumentProcessor {
     isValidName: boolean;
     isNotExpired: boolean;
     hasRequiredFields: boolean;
+    workerExists: boolean;
   } {
-    // Validate that a proper name was extracted (not empty, reasonable format)
+    // Check if extracted name matches "John Doe" (as per assignment requirement)
     const isValidName = !!(documentInfo.extractedName && 
-                          documentInfo.extractedName.trim().length > 0 &&
-                          this.isValidName(documentInfo.extractedName));
+                          documentInfo.extractedName.toLowerCase().trim() === 'john doe');
+    
+    // Check if worker exists in our database
+    const workerExists = !!(documentInfo.extractedName && 
+                           this.checkWorkerNameExists(documentInfo.extractedName));
     
     const isNotExpired = documentInfo.expiryDate ? documentInfo.expiryDate > new Date() : false;
     const hasRequiredFields = !!(documentInfo.extractedName && documentInfo.documentType);
@@ -223,7 +255,8 @@ export class DocumentProcessor {
     return {
       isValidName,
       isNotExpired,
-      hasRequiredFields
+      hasRequiredFields,
+      workerExists
     };
   }
 
@@ -246,14 +279,17 @@ export class DocumentProcessor {
       issues.push('Missing required document information');
     }
     if (!validation.isValidName) {
-      issues.push('Invalid or missing name in document');
+      issues.push('Name does not match "John Doe"');
     }
     if (!validation.isNotExpired) {
       issues.push('Document has expired or no valid expiry date found');
     }
+    if (!validation.workerExists) {
+      issues.push('Worker name not found in database');
+    }
 
     if (issues.length === 0) {
-      return 'All validations passed successfully. Document verified and approved.';
+      return 'All validations passed successfully. Document verified and approved. Worker exists in database.';
     }
 
     return `Verification failed: ${issues.join(', ')}.`;
