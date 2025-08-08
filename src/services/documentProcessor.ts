@@ -241,9 +241,10 @@ export class DocumentProcessor {
     hasRequiredFields: boolean;
     workerExists: boolean;
   } {
-    // Check if extracted name matches "John Doe" (as per assignment requirement)
+    // Validate that a proper name was extracted (any valid name, not just "John Doe")
     const isValidName = !!(documentInfo.extractedName && 
-                          documentInfo.extractedName.toLowerCase().trim() === 'john doe');
+                          documentInfo.extractedName.trim().length > 0 &&
+                          this.isValidName(documentInfo.extractedName));
     
     // Check if worker exists in our database
     const workerExists = !!(documentInfo.extractedName && 
@@ -279,7 +280,7 @@ export class DocumentProcessor {
       issues.push('Missing required document information');
     }
     if (!validation.isValidName) {
-      issues.push('Name does not match "John Doe"');
+      issues.push('Invalid or missing name in document');
     }
     if (!validation.isNotExpired) {
       issues.push('Document has expired or no valid expiry date found');
@@ -289,7 +290,7 @@ export class DocumentProcessor {
     }
 
     if (issues.length === 0) {
-      return 'All validations passed successfully. Document verified and approved. Worker exists in database.';
+      return 'All validations passed successfully. Document verified and approved. Valid name extracted and worker exists in database.';
     }
 
     return `Verification failed: ${issues.join(', ')}.`;
