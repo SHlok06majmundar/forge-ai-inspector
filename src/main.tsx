@@ -9,6 +9,9 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key")
 }
 
+// Force dark mode
+document.documentElement.classList.add('dark');
+
 createRoot(document.getElementById("root")!).render(
   <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
     <App />

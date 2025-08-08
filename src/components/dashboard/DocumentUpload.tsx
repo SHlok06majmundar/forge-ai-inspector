@@ -31,13 +31,13 @@ const DocumentUpload = ({ onFileUpload, isProcessing, processingProgress }: Docu
   });
 
   return (
-    <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-all duration-500 bg-gradient-to-br from-card via-card/80 to-primary/5 backdrop-blur-sm shadow-lg">
+    <Card className="border-2 border-dashed border-slate-600 hover:border-cyan-400/50 transition-all duration-500 bg-gradient-to-br from-slate-800/80 via-slate-700/80 to-slate-800/50 backdrop-blur-sm shadow-lg">
       <div
         {...getRootProps()}
         className={`p-8 text-center cursor-pointer rounded-lg transition-all duration-500 ${
           isDragActive 
-            ? 'bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary shadow-lg scale-105' 
-            : 'hover:bg-gradient-to-br hover:from-muted/20 hover:to-primary/5'
+            ? 'bg-gradient-to-br from-cyan-500/20 via-purple-500/10 to-transparent border-cyan-400 shadow-lg scale-105' 
+            : 'hover:bg-gradient-to-br hover:from-slate-700/20 hover:to-cyan-500/5'
         } ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
       >
         <input {...getInputProps()} />
@@ -56,17 +56,17 @@ const DocumentUpload = ({ onFileUpload, isProcessing, processingProgress }: Docu
         >
           <div className="relative">
             {isProcessing ? (
-              <div className="w-20 h-20 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center">
-                <Brain className="w-10 h-10 text-primary animate-pulse" />
-                <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+              <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/30 to-purple-500/10 rounded-full flex items-center justify-center">
+                <Brain className="w-10 h-10 text-cyan-400 animate-pulse" />
+                <div className="absolute inset-0 rounded-full border-4 border-cyan-400/20 border-t-cyan-400 animate-spin" />
               </div>
             ) : (
               <motion.div
                 whileHover={{ scale: 1.1 }}
-                className="w-20 h-20 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full flex items-center justify-center shadow-lg"
+                className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 via-purple-500/10 to-transparent rounded-full flex items-center justify-center shadow-lg"
               >
                 <Upload className={`w-10 h-10 transition-all duration-300 ${
-                  isDragActive ? 'text-primary scale-110' : 'text-muted-foreground'
+                  isDragActive ? 'text-cyan-400 scale-110' : 'text-slate-300'
                 }`} />
                 {!isProcessing && (
                   <motion.div
@@ -88,11 +88,11 @@ const DocumentUpload = ({ onFileUpload, isProcessing, processingProgress }: Docu
                 backgroundPosition: isProcessing ? ['0%', '100%'] : '0%',
               }}
               transition={{ duration: 2, repeat: isProcessing ? Infinity : 0 }}
-              className="text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent"
+              className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
             >
               {isProcessing ? 'AI Processing Document...' : 'Upload Document'}
             </motion.h3>
-            <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            <p className="text-slate-300 max-w-sm mx-auto leading-relaxed">
               {isProcessing 
                 ? (processingProgress ? processingProgress.stage : 'Our neural networks are analyzing your document...')
                 : 'Drag and drop your PDF or image file here, or click to browse. Our AI will instantly extract and verify the information.'

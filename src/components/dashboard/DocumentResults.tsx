@@ -287,7 +287,7 @@ const DocumentResults = ({ results, onDeleteDocument }: DocumentResultsProps) =>
           </CardContent>
         </Card>
 
-        {/* Enhanced Mobile Cards View */}
+        {/* Mobile Cards View */}
         <div className="lg:hidden space-y-4">
           {results.map((result, index) => (
             <motion.div

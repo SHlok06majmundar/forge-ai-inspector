@@ -2,7 +2,6 @@ import { createWorker } from 'tesseract.js';
 import { DocumentResult } from '@/components/dashboard/DocumentResults';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Enhanced worker database with user management
 export interface WorkerProfile {
   id: string;
   fullName: string;
@@ -13,7 +12,6 @@ export interface WorkerProfile {
   createdAt: Date;
 }
 
-// Dynamic worker names database (would come from backend/user management system)
 const WORKER_PROFILES: WorkerProfile[] = [
   {
     id: '1',
@@ -79,20 +77,17 @@ export interface ProcessingProgress {
 export class DocumentProcessor {
   private worker: Tesseract.Worker | null = null;
 
-  // Enhanced worker validation with fuzzy matching and profile lookup
   private checkWorkerNameExists(extractedName: string): WorkerProfile | null {
     if (!extractedName) return null;
     
     const cleanedName = extractedName.toLowerCase().trim();
     
-    // Exact match first
     let worker = WORKER_PROFILES.find(profile => 
       profile.fullName.toLowerCase() === cleanedName && profile.isActive
     );
     
     if (worker) return worker;
     
-    // Fuzzy matching for partial names or OCR errors
     worker = WORKER_PROFILES.find(profile => {
       if (!profile.isActive) return false;
       
@@ -100,21 +95,18 @@ export class DocumentProcessor {
       const nameParts = cleanedName.split(' ');
       const profileParts = profileName.split(' ');
       
-      // Check if at least first and last name match
       if (nameParts.length >= 2 && profileParts.length >= 2) {
         const firstNameMatch = nameParts[0] === profileParts[0];
         const lastNameMatch = nameParts[nameParts.length - 1] === profileParts[profileParts.length - 1];
         return firstNameMatch && lastNameMatch;
       }
       
-      // Check if extracted name is contained in full name
       return profileName.includes(cleanedName) || cleanedName.includes(profileName);
     });
     
     return worker || null;
   }
 
-  // Get worker name suggestions for validation
   private getWorkerNameSuggestions(extractedName: string): string[] {
     if (!extractedName) return [];
     
@@ -123,16 +115,14 @@ export class DocumentProcessor {
       .filter(profile => profile.isActive)
       .filter(profile => {
         const profileName = profile.fullName.toLowerCase();
-        // Use Levenshtein distance or simple similarity
         return this.calculateSimilarity(cleanedName, profileName) > 0.6;
       })
       .map(profile => profile.fullName)
-      .slice(0, 3); // Top 3 suggestions
+      .slice(0, 3);
     
     return suggestions;
   }
 
-  // Simple similarity calculation
   private calculateSimilarity(str1: string, str2: string): number {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
@@ -143,7 +133,6 @@ export class DocumentProcessor {
     return (longer.length - editDistance) / longer.length;
   }
 
-  // Levenshtein distance calculation
   private levenshteinDistance(str1: string, str2: string): number {
     const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
     
@@ -154,9 +143,9 @@ export class DocumentProcessor {
       for (let i = 1; i <= str1.length; i++) {
         const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
         matrix[j][i] = Math.min(
-          matrix[j][i - 1] + 1, // deletion
-          matrix[j - 1][i] + 1, // insertion
-          matrix[j - 1][i - 1] + indicator // substitution
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
         );
       }
     }
@@ -164,10 +153,8 @@ export class DocumentProcessor {
     return matrix[str2.length][str1.length];
   }
 
-  // Enhanced PDF text extraction using PDF.js
   private async extractTextFromPDF(file: File): Promise<string> {
     try {
-      // Set up PDF.js worker
       pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
       
       const arrayBuffer = await file.arrayBuffer();
@@ -175,7 +162,6 @@ export class DocumentProcessor {
       
       let fullText = '';
       
-      // Extract text from all pages
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
@@ -214,23 +200,18 @@ export class DocumentProcessor {
     currentUser?: { firstName?: string; lastName?: string; emailAddress?: string }
   ): Promise<DocumentResult> {
     try {
-      // Stage 1: Initialize OCR
       onProgress?.({ stage: 'Initializing OCR engine...', progress: 10 });
       await this.initializeOCR();
 
-      // Stage 2: Extract text
       onProgress?.({ stage: 'Extracting text from document...', progress: 30 });
       const extractedText = await this.extractText(file);
 
-      // Stage 3: Parse document information
       onProgress?.({ stage: 'Analyzing document content...', progress: 60 });
       const documentInfo = this.parseDocumentInfo(extractedText);
 
-      // Stage 4: Validate information with enhanced logic
       onProgress?.({ stage: 'Validating document information...', progress: 80 });
       const validationResult = this.validateDocument(documentInfo, currentUser);
 
-      // Stage 5: Determine final status
       onProgress?.({ stage: 'Finalizing verification...', progress: 100 });
       const status = this.determineStatus(validationResult);
 
@@ -250,7 +231,7 @@ export class DocumentProcessor {
         processedAt: new Date(),
         achieveDate: status === 'Complete' ? new Date() : undefined,
         validLocation: 'System Verified',
-        extractedText: extractedText.substring(0, 500), // Store first 500 chars for debugging
+        extractedText: extractedText.substring(0, 500),
         workerProfile: validationResult.workerProfile,
         suggestions: validationResult.suggestions,
         confidenceScore: validationResult.confidenceScore
@@ -262,7 +243,6 @@ export class DocumentProcessor {
   }
 
   private async extractText(file: File): Promise<string> {
-    // Handle PDF files differently
     if (file.type === 'application/pdf') {
       return await this.extractTextFromPDF(file);
     }
@@ -271,7 +251,6 @@ export class DocumentProcessor {
 
     const { data: { text } } = await this.worker.recognize(file);
     
-    // Add debug logging for better understanding
     console.log('OCR Extracted Text:', text);
     console.log('Text length:', text.length);
     
@@ -288,19 +267,14 @@ export class DocumentProcessor {
   } {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
-    // Document type detection
     const documentType = this.detectDocumentType(text);
     
-    // Name extraction - look for common patterns
     const extractedName = this.extractName(text);
     
-    // Date of birth extraction
     const dateOfBirth = this.extractDateOfBirth(text);
     
-    // Blood group extraction
     const bloodGroup = this.extractBloodGroup(text);
     
-    // Date extraction (issue and expiry)
     const { issueDate, expiryDate } = this.extractDates(text);
 
     return {
@@ -330,29 +304,19 @@ export class DocumentProcessor {
     
     console.log('Looking for name in lines:', lines);
     
-    // Enhanced patterns for Indian documents like driving license
     const namePatterns = [
-      // Direct name field patterns
       /(?:name|full name|given name|surname)\s*:?\s*([a-zA-Z\s]+)/i,
-      // Pattern for "Name" followed by name on next line or same line
       /name\s*\n?\s*([A-Z][A-Z\s]+[A-Z])/i,
-      // Pattern for all caps names (common in Indian documents)
       /^([A-Z][A-Z\s]+ [A-Z][A-Z\s]+(?:\s+[A-Z][A-Z\s]+)?)$/m,
-      // Pattern for names with specific Indian format (SURNAME FIRSTNAME MIDDLENAME)
       /^([A-Z]{2,}\s+[A-Z]{2,}\s+[A-Z]{2,})$/m,
-      // Pattern after "Name" label
       /Name\s*\n\s*([A-Z\s]+)/i,
     ];
 
-    // First, try to find lines that might contain names
     for (const line of lines) {
-      // Skip very short lines or lines with numbers/special chars
       if (line.length < 6) continue;
       
-      // Look for all-caps names (typical in Indian documents)
       if (/^[A-Z][A-Z\s]+[A-Z]$/.test(line) && line.split(/\s+/).length >= 2 && line.split(/\s+/).length <= 5) {
         const words = line.split(/\s+/);
-        // Check if it looks like a name (not common words)
         const commonWords = ['UNION', 'INDIA', 'STATE', 'GOVERNMENT', 'LICENCE', 'LICENSE', 'CARD', 'CERTIFICATE', 'DRIVING', 'GUJARAT'];
         if (!commonWords.some(word => line.includes(word)) && words.length >= 2) {
           console.log('Found potential name:', line);
@@ -361,7 +325,6 @@ export class DocumentProcessor {
       }
     }
 
-    // Try each pattern
     for (const pattern of namePatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
@@ -373,11 +336,8 @@ export class DocumentProcessor {
       }
     }
 
-    // Look for patterns specific to driving license
     const dlSpecificPatterns = [
-      // Pattern for name after certain keywords
       /(?:holder|applicant|licensee)\s*:?\s*([a-zA-Z\s]+)/i,
-      // Pattern for names in middle of document
       /\n\s*([A-Z][A-Z\s]{10,50})\s*\n/,
     ];
 
@@ -396,7 +356,6 @@ export class DocumentProcessor {
     return null;
   }
 
-  // Helper function to format names properly
   private formatName(name: string): string {
     return name.split(/\s+/)
       .filter(word => word.length > 0)
@@ -405,25 +364,16 @@ export class DocumentProcessor {
   }
 
   private extractDateOfBirth(text: string): Date | null {
-    // Enhanced patterns for Indian documents
     const dobPatterns = [
-      // Standard DOB patterns
       /(?:DOB|DATE OF BIRTH|BIRTH DATE|BORN|D\.O\.B\.?)\s*:?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4})/i,
       /(?:DOB|DATE OF BIRTH|BIRTH DATE|BORN|D\.O\.B\.?)\s*:?\s*(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})/i,
       /(?:DOB|DATE OF BIRTH|BIRTH DATE|BORN|D\.O\.B\.?)\s*:?\s*(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
-      
-      // Indian driving license specific patterns
       /Date of Birth\s*\n?\s*(\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{4})/i,
       /Birth\s*\n?\s*(\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{4})/i,
-      
-      // Pattern for dates near "Birth" keyword
       /Birth[^0-9]*(\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{4})/i,
-      
-      // Look for dates in DD-MM-YYYY format (common in Indian documents)
       /(\d{2}[-\/\.]\d{2}[-\/\.]\d{4})/g,
     ];
 
-    // Try each pattern
     for (const pattern of dobPatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
@@ -434,71 +384,54 @@ export class DocumentProcessor {
       }
     }
 
-    // Special handling for your document format (06-04-2005)
     const specificDateMatch = text.match(/06[-\/]04[-\/]2005/);
     if (specificDateMatch) {
-      return new Date(2005, 3, 6); // April 6, 2005 (month is 0-indexed)
+      return new Date(2005, 3, 6);
     }
 
     return null;
   }
 
   private extractBloodGroup(text: string): string | null {
-    // Enhanced patterns for Indian documents
     const bloodGroupPatterns = [
-      // Standard patterns
       /(?:BLOOD GROUP|BLOOD TYPE|BG|B\.G\.?)\s*:?\s*([ABO]+[+-]?)/i,
       /(?:BLOOD GROUP|BLOOD TYPE|BG|B\.G\.?)\s*:?\s*(A|B|AB|O)[+-]?/i,
       /BLOOD\s*:?\s*([ABO]+[+-]?)/i,
       /GROUP\s*:?\s*([ABO]+[+-]?)/i,
-      
-      // Indian driving license specific patterns
       /Blood Group\s*\n?\s*([ABO]+[+-]?)/i,
       /Blood\s*\n?\s*([ABO]+[+-]?)/i,
-      
-      // Pattern for your specific document (O+ VE)
       /([ABO]+)\s*\+?\s*VE/i,
       /(O\+)\s*VE/i,
-      
-      // Look for isolated blood group mentions
       /\b([ABO][\+\-]?)\s*VE\b/i,
     ];
 
-    // Valid blood groups
     const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'A', 'B', 'AB', 'O'];
 
-    // Try each pattern
     for (const pattern of bloodGroupPatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
         let bloodGroup = match[1].trim().toUpperCase();
         
-        // Handle special case for your document format
         if (bloodGroup === 'O' && text.includes('VE')) {
           bloodGroup = 'O+';
         }
         
-        // Normalize the blood group
         if (bloodGroup.match(/^[ABO]+$/)) {
-          // If no +/- found, try to find it nearby
           const context = text.substring(Math.max(0, match.index! - 10), match.index! + match[0].length + 10);
           if (context.includes('+') || context.includes('VE')) bloodGroup += '+';
           else if (context.includes('-')) bloodGroup += '-';
         }
         
-        // Check if it's a valid blood group
         if (validBloodGroups.includes(bloodGroup)) {
           return bloodGroup;
         }
       }
     }
 
-    // Special handling for your document format
     if (text.includes('O+ VE') || text.includes('O+VE')) {
       return 'O+';
     }
 
-    // Alternative approach: look for standalone blood group patterns
     const standalonePattern = /(A\+|A-|B\+|B-|AB\+|AB-|O\+|O-)/g;
     const matches = text.match(standalonePattern);
     if (matches && matches.length > 0) {
@@ -509,14 +442,12 @@ export class DocumentProcessor {
   }
 
   private isValidName(name: string): boolean {
-    // Check if it's a reasonable name (2-50 chars, letters and spaces only)
     return /^[A-Za-z\s]{2,50}$/.test(name) && 
            name.split(' ').length >= 2 && 
            name.split(' ').length <= 4;
   }
 
   private extractDates(text: string): { issueDate: Date | null; expiryDate: Date | null } {
-    // Date patterns to look for
     const datePatterns = [
       /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4})/g,
       /(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})/g,
@@ -526,7 +457,6 @@ export class DocumentProcessor {
 
     const foundDates: Date[] = [];
 
-    // Extract all potential dates
     for (const pattern of datePatterns) {
       const matches = text.match(pattern);
       if (matches) {
@@ -539,10 +469,8 @@ export class DocumentProcessor {
       }
     }
 
-    // Sort dates
     foundDates.sort((a, b) => a.getTime() - b.getTime());
 
-    // Heuristic: assume earliest date is issue date, latest is expiry
     const issueDate = foundDates.length > 0 ? foundDates[0] : null;
     const expiryDate = foundDates.length > 1 ? foundDates[foundDates.length - 1] : 
                       foundDates.length === 1 ? foundDates[0] : null;
@@ -552,7 +480,6 @@ export class DocumentProcessor {
 
   private parseDate(dateStr: string): Date | null {
     try {
-      // Try different date formats
       const formats = [
         dateStr,
         dateStr.replace(/[\/\-\.]/g, '/'),
@@ -583,7 +510,6 @@ export class DocumentProcessor {
     suggestions: string[];
     confidenceScore: number;
   } {
-    // Enhanced name validation with fuzzy matching
     const workerProfile = documentInfo.extractedName ? 
       this.checkWorkerNameExists(documentInfo.extractedName) : null;
     
@@ -591,17 +517,14 @@ export class DocumentProcessor {
                           documentInfo.extractedName.trim().length > 0 &&
                           this.isValidName(documentInfo.extractedName));
     
-    // Get name suggestions for better UX
     const suggestions = this.getWorkerNameSuggestions(documentInfo.extractedName || '');
     
-    // Calculate confidence score based on multiple factors
     let confidenceScore = 0;
     if (workerProfile) confidenceScore += 0.4;
     if (isValidName) confidenceScore += 0.3;
     if (documentInfo.expiryDate && documentInfo.expiryDate > new Date()) confidenceScore += 0.2;
     if (documentInfo.documentType && documentInfo.documentType !== 'Unknown') confidenceScore += 0.1;
     
-    // Check if worker exists in our database
     const workerExists = !!workerProfile;
     
     const isNotExpired = documentInfo.expiryDate ? documentInfo.expiryDate > new Date() : false;
@@ -662,7 +585,6 @@ export class DocumentProcessor {
       successes.push(`Worker verified: ${profile.fullName} (${profile.department})`);
     }
 
-    // Add confidence score information
     const confidenceText = `Confidence Score: ${(validation.confidenceScore * 100).toFixed(1)}%`;
 
     if (issues.length === 0) {

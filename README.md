@@ -1,73 +1,114 @@
-# Welcome to your Lovable project
+# ForgeAI Inspector - Advanced Document Verification System
 
-## Project info
+A cutting-edge AI-powered document verification system built with React, TypeScript, and advanced OCR technology.
 
-**URL**: https://lovable.dev/projects/f47e56cf-bbd6-4e7a-8b7c-6ab1c1182a03
+## 🚀 Features
 
-## How can I edit this code?
+- **Advanced OCR Processing**: Powered by Tesseract.js with custom optimization
+- **AI Document Analysis**: Intelligent field extraction and validation
+- **Real-time Verification**: Instant document processing with live feedback
+- **Multi-format Support**: PDF, JPG, PNG document processing
+- **Fuzzy Matching**: Smart name matching with confidence scoring
+- **Modern UI**: Futuristic design with smooth animations
+- **Secure Authentication**: Clerk-based user management
+- **Performance Optimized**: Built with Vite for lightning-fast development
 
-There are several ways of editing your application.
+## 🛠️ Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + Shadcn/ui
+- **OCR Engine**: Tesseract.js
+- **PDF Processing**: PDF.js
+- **Authentication**: Clerk
+- **Animations**: Framer Motion
+- **State Management**: React Query
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f47e56cf-bbd6-4e7a-8b7c-6ab1c1182a03) and start prompting.
+## 🏃 Quick Start
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ 
+- npm or yarn
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository:
+```bash
+git clone https://github.com/SHlok06majmundar/forge-ai-inspector.git
+cd forge-ai-inspector
+```
 
-Follow these steps:
+2. Install dependencies:
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. Configure your Clerk keys in `.env.local`:
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_key_here
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Development
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Building for Production
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📁 Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/          # Reusable UI components
+│   ├── auth/           # Authentication components
+│   ├── dashboard/      # Dashboard-specific components
+│   └── ui/             # Shadcn/ui components
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+├── pages/              # Page components
+└── services/           # Business logic and API calls
+```
 
-This project is built with:
+## 🔧 Configuration
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Environment Variables
 
-## How can I deploy this project?
+Create a `.env.local` file with:
 
-Simply open [Lovable](https://lovable.dev/projects/f47e56cf-bbd6-4e7a-8b7c-6ab1c1182a03) and click on Share -> Publish.
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Vite Configuration
 
-Yes, you can!
+The project is configured to run on port 5173 by default. You can modify this in `vite.config.ts`.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🤝 Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+Built with ❤️ using React, TypeScript, and AI technology.
