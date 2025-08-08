@@ -10,6 +10,8 @@ export interface DocumentResult {
   fileName: string;
   documentType: string;
   extractedName: string;
+  dateOfBirth: Date | null;
+  bloodGroup: string | null;
   issueDate: Date | null;
   expiryDate: Date | null;
   isValidName: boolean;
@@ -89,6 +91,8 @@ const DocumentResults = ({ results, onDeleteDocument }: DocumentResultsProps) =>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Document</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Type</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Name</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Date of Birth</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Blood Group</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Validity</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Status</th>
                   <th className="text-right py-3 px-4 font-semibold text-foreground">Actions</th>
@@ -120,6 +124,24 @@ const DocumentResults = ({ results, onDeleteDocument }: DocumentResultsProps) =>
                           <CheckCircle className="w-4 h-4 text-success" />
                         ) : (
                           <XCircle className="w-4 h-4 text-destructive" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="text-sm">
+                        {result.dateOfBirth ? (
+                          <span className="font-medium">{format(result.dateOfBirth, 'MMM dd, yyyy')}</span>
+                        ) : (
+                          <span className="text-muted-foreground">Not found</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="text-sm">
+                        {result.bloodGroup ? (
+                          <Badge variant="outline" className="font-medium">{result.bloodGroup}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">Not found</span>
                         )}
                       </div>
                     </td>
@@ -212,6 +234,22 @@ const DocumentResults = ({ results, onDeleteDocument }: DocumentResultsProps) =>
                         <XCircle className="w-3 h-3 text-destructive" />
                       )}
                     </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Date of Birth:</span>
+                    {result.dateOfBirth ? (
+                      <div className="font-medium">{format(result.dateOfBirth, 'MMM dd, yyyy')}</div>
+                    ) : (
+                      <div className="font-medium text-muted-foreground">Not found</div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Blood Group:</span>
+                    {result.bloodGroup ? (
+                      <Badge variant="outline" className="font-medium text-xs">{result.bloodGroup}</Badge>
+                    ) : (
+                      <div className="font-medium text-muted-foreground">Not found</div>
+                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground">Expires:</span>

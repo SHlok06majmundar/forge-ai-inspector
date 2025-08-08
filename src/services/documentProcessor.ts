@@ -71,6 +71,8 @@ export class DocumentProcessor {
         fileName: file.name,
         documentType: documentInfo.documentType || 'Unknown',
         extractedName: documentInfo.extractedName || 'Not found',
+        dateOfBirth: documentInfo.dateOfBirth,
+        bloodGroup: documentInfo.bloodGroup,
         issueDate: documentInfo.issueDate,
         expiryDate: documentInfo.expiryDate,
         isValidName: validationResult.isValidName,
@@ -103,6 +105,8 @@ export class DocumentProcessor {
   private parseDocumentInfo(text: string): {
     documentType: string | null;
     extractedName: string | null;
+    dateOfBirth: Date | null;
+    bloodGroup: string | null;
     issueDate: Date | null;
     expiryDate: Date | null;
   } {
@@ -114,12 +118,20 @@ export class DocumentProcessor {
     // Name extraction - look for common patterns
     const extractedName = this.extractName(text);
     
-    // Date extraction
+    // Date of birth extraction
+    const dateOfBirth = this.extractDateOfBirth(text);
+    
+    // Blood group extraction
+    const bloodGroup = this.extractBloodGroup(text);
+    
+    // Date extraction (issue and expiry)
     const { issueDate, expiryDate } = this.extractDates(text);
 
     return {
       documentType,
       extractedName,
+      dateOfBirth,
+      bloodGroup,
       issueDate,
       expiryDate
     };
@@ -167,6 +179,77 @@ export class DocumentProcessor {
           return potentialName;
         }
       }
+    }
+
+    return null;
+  }
+
+  private extractDateOfBirth(text: string): Date | null {
+    const upperText = text.toUpperCase();
+    
+    // Common patterns for date of birth
+    const dobPatterns = [
+      /(?:DOB|DATE OF BIRTH|BIRTH DATE|BORN|D\.O\.B\.?)\s*:?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4})/i,
+      /(?:DOB|DATE OF BIRTH|BIRTH DATE|BORN|D\.O\.B\.?)\s*:?\s*(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})/i,
+      /(?:DOB|DATE OF BIRTH|BIRTH DATE|BORN|D\.O\.B\.?)\s*:?\s*(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
+      /BIRTH\s*:?\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4})/i,
+      /BIRTH\s*:?\s*(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})/i
+    ];
+
+    // Try each pattern
+    for (const pattern of dobPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        const date = this.parseDate(match[1]);
+        if (date && date.getFullYear() > 1900 && date.getFullYear() <= new Date().getFullYear()) {
+          return date;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private extractBloodGroup(text: string): string | null {
+    const upperText = text.toUpperCase();
+    
+    // Common patterns for blood group
+    const bloodGroupPatterns = [
+      /(?:BLOOD GROUP|BLOOD TYPE|BG|B\.G\.?)\s*:?\s*([ABO]+[+-]?)/i,
+      /(?:BLOOD GROUP|BLOOD TYPE|BG|B\.G\.?)\s*:?\s*(A|B|AB|O)[+-]?/i,
+      /BLOOD\s*:?\s*([ABO]+[+-]?)/i,
+      /GROUP\s*:?\s*([ABO]+[+-]?)/i
+    ];
+
+    // Valid blood groups
+    const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'A', 'B', 'AB', 'O'];
+
+    // Try each pattern
+    for (const pattern of bloodGroupPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        let bloodGroup = match[1].trim().toUpperCase();
+        
+        // Normalize the blood group
+        if (bloodGroup.match(/^[ABO]+$/)) {
+          // If no +/- found, try to find it nearby
+          const context = text.substring(Math.max(0, match.index! - 10), match.index! + match[0].length + 10);
+          if (context.includes('+')) bloodGroup += '+';
+          else if (context.includes('-')) bloodGroup += '-';
+        }
+        
+        // Check if it's a valid blood group
+        if (validBloodGroups.includes(bloodGroup)) {
+          return bloodGroup;
+        }
+      }
+    }
+
+    // Alternative approach: look for standalone blood group patterns
+    const standalonePattern = /(A\+|A-|B\+|B-|AB\+|AB-|O\+|O-)/g;
+    const matches = text.match(standalonePattern);
+    if (matches && matches.length > 0) {
+      return matches[0];
     }
 
     return null;
